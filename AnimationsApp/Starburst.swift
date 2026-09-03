@@ -9,7 +9,7 @@ struct StarburstView: View {
     var body: some View {
         GeometryReader { geometry in
             ZStack {
-                // Same dark background as SpriteKit scene
+
                 Color(red: 0.035, green: 0.035, blue: 0.075)
                     .ignoresSafeArea()
 
@@ -87,6 +87,8 @@ private final class StarburstController {
         var baseWidPoints: CGFloat
         var zDepth: CGFloat
         var zVelocity: CGFloat
+        var collapseJitter: CGFloat // per-particle variance to avoid whole-canvas scaling
+        var endScale: CGFloat // per-particle final radius (avoid single point)
         var entity: ModelEntity
     }
 
@@ -176,6 +178,8 @@ private final class StarburstController {
             let baseWid = CGFloat.random(in: 1.5...2.6) * (rFactor > 0.85 ? 1.08 : 1.0)
             let zDepth = CGFloat.random(in: -1.0...1.0)
             let zVelocity = CGFloat.random(in: -0.45...0.45)
+            let collapseJitter = CGFloat.random(in: -0.07...0.07)
+            let endScale = CGFloat.random(in: 0.07...0.18) // avoid single point collapse
 
             var mat = UnlitMaterial(color: .white.withAlphaComponent(0))
             mat.blending = .transparent(opacity: .init(floatLiteral: 0))
@@ -189,12 +193,13 @@ private final class StarburstController {
             // Depth layer z offset not needed as separate entities, just z position
             root.addChild(entity)
             particleEntities.append(entity)
-            particles.append(Particle(angle: angle, targetRPoints: targetR, baseLenPoints: baseLen, baseWidPoints: baseWid, zDepth: zDepth, zVelocity: zVelocity, entity: entity))
+            particles.append(Particle(angle: angle, targetRPoints: targetR, baseLenPoints: baseLen, baseWidPoints: baseWid, zDepth: zDepth, zVelocity: zVelocity, collapseJitter: collapseJitter, endScale: endScale, entity: entity))
         }
     }
 
     // MARK: - Easing
     @inline(__always) private func easeOutCubic(_ t: CGFloat) -> CGFloat { let p=t-1; return p*p*p+1 }
+    @inline(__always) private func easeOutQuart(_ t: CGFloat) -> CGFloat { let p=t-1; return 1 - p*p*p*p } // slower at end
     @inline(__always) private func easeInCubic(_ t: CGFloat) -> CGFloat { t*t*t }
     @inline(__always) private func easeInOutCubic(_ t: CGFloat) -> CGFloat {
         if t<0.5 { return 4*t*t*t }
@@ -222,8 +227,9 @@ private final class StarburstController {
     private func updateScene(for ct: CGFloat) {
         let preEnd: CGFloat = 0.20
         let buildEnd: CGFloat = 0.45
-        let expandEnd: CGFloat = 4.25
-        let collapseEnd: CGFloat = 6.70
+        let expandEnd: CGFloat = 4.35 // expand a bit longer + slower
+        let holdEnd: CGFloat = 4.60 // stationary at max (no velocity)
+        let collapseEnd: CGFloat = 6.85
 
         var globalRadiusScale: CGFloat = 0
         var globalColor: UIColor = .white
@@ -273,7 +279,7 @@ private final class StarburstController {
             dotScale = Float(0.012 + Double(p)*0.006)
         } else if ct < expandEnd {
             let p = (ct - buildEnd) / (expandEnd - buildEnd)
-            let eased = easeOutCubic(p)
+            let eased = easeOutQuart(p) // slower as approaches max (was easeOutCubic)
             globalRadiusScale = 0.10 + 0.90 * eased
             zSpread = sin(Double(p) * .pi) * 0.9
             if p < 0.30 {
@@ -293,28 +299,51 @@ private final class StarburstController {
             dotVisible = p <= 0.35
             dotAlpha = max(0, 1 - p*3.0)
             dotScale = 0.018
+        } else if ct < holdEnd {
+            // Stationary at max expansion — velocity zero (no flicker)
+            globalRadiusScale = 1.0
+            globalColor = colWhite
+            globalLengthScale = 0.18 // point stationary
+            globalWidthScale = 0.45
+            globalAlpha = 0.92
+            zSpread = 0
+            haloAlpha = 0.12
+            haloScale = 0.1875
+            glowAlpha = 0.0375
+            glowScale = 0.09
+            dotVisible = false
         } else if ct < collapseEnd {
-            let p = (ct - expandEnd) / (collapseEnd - expandEnd)
-            let eased = easeInCubic(p)
-            globalRadiusScale = 1.0 + (0.05 - 1.0) * eased
-            zSpread = 0.9 * (1 - p)
+            let p = (ct - holdEnd) / (collapseEnd - holdEnd)
+            let eased = easeInCubic(p) // accelerating inward (slow→fast)
+            // Per-particle handled later, but set global reference for non-particle elements
+            globalRadiusScale = 1.0 // placeholder (per-particle overrides)
+            zSpread = sin(Double(p) * .pi) * 0.6 // smaller spread, 0 at both ends
             if p < 0.38 { globalColor = lerpColor(colWhite, colLav, p/0.38) }
             else if p < 0.62 { globalColor = lerpColor(colLav, colPurple, (p-0.38)/0.24) }
             else if p < 0.85 { globalColor = lerpColor(colPurple, colDeep, (p-0.62)/0.23) }
             else { globalColor = lerpColor(colDeep, colBlue, (p-0.85)/0.15) }
-            let velPeak = sin(Double(p) * .pi)
-            globalLengthScale = 0.18 + velPeak * 1.15 + p*p*0.22
-            globalWidthScale = 0.45 + velPeak * 0.72 + p*0.15
-            globalAlpha = 1.0 - p * 0.22
-            haloAlpha = eased * 0.52
-            haloScale = Float(lerp(0.05, 0.18, eased))
-            glowAlpha = eased * 0.18
-            glowScale = Float(lerp(0.05, 0.12, eased))
-            dotVisible = p > 0.88
-            dotAlpha = dotVisible ? (p - 0.88)/0.12 : 0
+            // Reverse of expansion: point (0.18) → droplet (2.35) as acceleration increases
+            globalLengthScale = lerp(0.18, 2.35, eased)
+            globalWidthScale = lerp(0.45, 1.75, eased)
+            globalAlpha = 0.92 - p * 0.18 // fade slightly while contracting, keep visible until center
+            haloAlpha = lerp(0.12, 0.42, eased)
+            haloScale = Float(lerp(0.1875, 0.16, Double(eased)))
+            glowAlpha = lerp(0.0375, 0.14, eased)
+            glowScale = Float(lerp(0.09, 0.10, Double(eased)))
+            dotVisible = false // center stays filled by particles until all back, no dot yet
+            dotAlpha = 0
         } else {
-            particlesHidden = true
-            globalRadiusScale = 0.05
+            // Gap before restart — keep center filled (particles at endScale cluster) until last moment
+            // Don't clear center as long as particles are back; vanish/restart just before next cycle
+            let gapP = (ct - collapseEnd) / CGFloat(cycleDuration - collapseEnd) // 0..1 (0.35s gap)
+            globalRadiusScale = 0.12 // small cluster, not single point
+            globalColor = colBlue
+            globalLengthScale = 0.22
+            globalWidthScale = 0.5
+            globalAlpha = 0.70 * (1 - gapP) // fade while still at center
+            particlesHidden = gapP > 0.85 // hide only last 15% (~0.05s) before restart — center not cleared early
+            haloAlpha = 0
+            glowAlpha = 0
             haloAlpha = 0.12
             glowAlpha = 0.05
             dotVisible = true
@@ -362,7 +391,9 @@ private final class StarburstController {
             return
         }
 
-        // Particle update (perspective + radius)
+        // Particle update — per-particle collapse (particles individually fall, not canvas) + hold stationary
+        let isCollapseOrGap = ct >= holdEnd
+        let collapseP: CGFloat = ct < holdEnd ? 0 : ct < collapseEnd ? (ct - holdEnd) / (collapseEnd - holdEnd) : 1
         for idx in particles.indices {
             let pr = particles[idx]
             let e = particleEntities[idx]
@@ -372,7 +403,25 @@ private final class StarburstController {
             let clampedZ = max(-1, min(1, effectiveZ))
             let perspectiveScale = 1.0 + clampedZ * 0.40
 
-            let baseR = pr.targetRPoints * globalRadiusScale
+            // Use per-particle radius during collapse/gap to avoid whole-canvas sinking
+            // Delay per particle so they don't all move together — center stays filled until last arrives
+            let baseR: CGFloat
+            var curLenScale = globalLengthScale
+            var curWidScale = globalWidthScale
+            if isCollapseOrGap {
+                let delay = (pr.collapseJitter + 0.07) / 0.14 * 0.22 // 0...0.22 staggered start
+                let pAdj = collapseP < delay ? 0 : (collapseP - delay) / (1 - delay)
+                let easedAdj = easeInCubic(pAdj) // slow start (point) → fast end (droplet) — reverse of expansion
+                let indScale = 1.0 + (pr.endScale - 1.0) * easedAdj
+                baseR = pr.targetRPoints * indScale
+                // Reverse of expansion: point (0.18) → droplet (2.35) as acceleration increases
+                curLenScale = lerp(0.18, 2.35, easedAdj)
+                curWidScale = lerp(0.45, 1.75, easedAdj)
+            } else {
+                baseR = pr.targetRPoints * globalRadiusScale
+                curLenScale = globalLengthScale
+                curWidScale = globalWidthScale
+            }
             let baseX = cos(pr.angle) * baseR
             let baseY = sin(pr.angle) * baseR
             // offset then perspective — 0.00185 m/point (just a little bigger)
@@ -383,8 +432,8 @@ private final class StarburstController {
             e.orientation = simd_quatf(angle: Float(pr.angle + .pi/2), axis: [0,0,1])
 
             let sizeScale = Float(perspectiveScale)
-            let hPoints = pr.baseLenPoints * globalLengthScale * CGFloat(sizeScale)
-            let wPoints = pr.baseWidPoints * globalWidthScale * CGFloat(sizeScale)
+            let hPoints = pr.baseLenPoints * curLenScale * CGFloat(sizeScale)
+            let wPoints = pr.baseWidPoints * curWidScale * CGFloat(sizeScale)
             let hM = max(1.8, hPoints) * 0.00185
             let wM = max(1.1, wPoints) * 0.00185
             e.scale = SIMD3<Float>(Float(wM), Float(hM), Float(wM))

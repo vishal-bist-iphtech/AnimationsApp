@@ -6,12 +6,12 @@
 //
 
 import SwiftUI
-// import SpriteKit // kept for FireworkScene (commented out below)
-// import RealityKit // used by Starburst.swift
+// import SpriteKit
+ import RealityKit
 
 struct ContentView: View {
     
-    // --- FireworkScene configuration (COMMENTED OUT to show Starburst RealityKit animation) ---
+    // --- FireworkScene configuration ---
     // Kept intact per request — do not delete.
     /*
     @State private var scene: FireworkScene = {
@@ -25,11 +25,11 @@ struct ContentView: View {
     */
     
     var body: some View {
-        // --- Starburst RealityKit animation (as close as video) ---
-        StarburstView()
-            .ignoresSafeArea()
+        // --- Starburst RealityKit animation ---
+//        StarburstView()
+//            .ignoresSafeArea()
 
-        /* --- FireworkScene SpriteKit view (COMMENTED OUT) ---
+        /* --- FireworkScene SpriteKit view ---
         GeometryReader { geometry in
             ZStack {
                 Color(red: 0.035, green: 0.035, blue: 0.075)

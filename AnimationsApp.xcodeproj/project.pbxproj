@@ -65,6 +65,7 @@
 			);
 			name = AnimationsApp;
 			packageProductDependencies = (
+				0F58123A3047ED8D00638698 /* Vortex */,
 			);
 			productName = AnimationsApp;
 			productReference = 0F58122B3047ED8D00638698 /* AnimationsApp.app */;
@@ -94,6 +95,9 @@
 			);
 			mainGroup = 0F5812223047ED8D00638698;
 			minimizedProjectReferenceProxies = 1;
+			packages = (
+				0F5812393047ED8D00638698 /* XCRemoteSwiftPackageReference "Vortex" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 0F58122C3047ED8D00638698 /* Products */;
 			projectDirPath = "";
@@ -123,6 +127,25 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0F5812393047ED8D00638698 /* XCRemoteSwiftPackageReference "Vortex" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/twostraws/Vortex";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		0F58123A3047ED8D00638698 /* Vortex */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0F5812393047ED8D00638698 /* XCRemoteSwiftPackageReference "Vortex" */;
+			productName = Vortex;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0F5812343047ED8E00638698 /* Debug */ = {

@@ -39,6 +39,8 @@ final class FireworkScene: SKScene {
         var node: SKSpriteNode
         var zDepth: CGFloat // -1 (back) to 1 (front)
         var zVelocity: CGFloat
+        var collapseJitter: CGFloat
+        var endScale: CGFloat
     }
     private var particles: [Particle] = []
 
@@ -264,12 +266,14 @@ final class FireworkScene: SKScene {
             }
             let targetR = maxRadius * rFactor
 
-            // Base size: modest randomness, outer slightly longer but global scale will dominate
-            let baseLen = CGFloat.random(in: 10...18) * (0.9 + 0.2 * rFactor)
-            let baseWid = CGFloat.random(in: 1.0...1.9) * (rFactor > 0.85 ? 1.05 : 1.0)
+            // Base size: a little bigger (was 10...18 /1.0...1.9)
+            let baseLen = CGFloat.random(in: 13...22) * (0.9 + 0.2 * rFactor)
+            let baseWid = CGFloat.random(in: 1.5...2.6) * (rFactor > 0.85 ? 1.08 : 1.0)
             
             let zDepth = CGFloat.random(in: -1.0...1.0)
             let zVelocity = CGFloat.random(in: -0.45...0.45)
+            let collapseJitter = CGFloat.random(in: -0.07...0.07)
+            let endScale = CGFloat.random(in: 0.07...0.18)
 
             let node = SKSpriteNode(texture: streakTexture)
             node.anchorPoint = CGPoint(x: 0.5, y: 0.0)
@@ -293,7 +297,9 @@ final class FireworkScene: SKScene {
                 baseWid: baseWid,
                 node: node,
                 zDepth: zDepth,
-                zVelocity: zVelocity
+                zVelocity: zVelocity,
+                collapseJitter: collapseJitter,
+                endScale: endScale
             ))
         }
     }
@@ -302,6 +308,10 @@ final class FireworkScene: SKScene {
     @inline(__always) private func easeOutCubic(_ t: CGFloat) -> CGFloat {
         let p = t - 1
         return p * p * p + 1
+    }
+    @inline(__always) private func easeOutQuart(_ t: CGFloat) -> CGFloat {
+        let p = t - 1
+        return 1 - p * p * p * p
     }
     @inline(__always) private func easeInCubic(_ t: CGFloat) -> CGFloat {
         return t * t * t
@@ -342,11 +352,12 @@ final class FireworkScene: SKScene {
     private func updateScene(for t: TimeInterval) {
         let ct = CGFloat(t)
 
-        // ----- Single smooth cycle: pre -> build -> expand -> collapse (no hold gap) -----
+        // ----- Single smooth cycle: pre -> build -> expand -> hold(stationary) -> collapse(reverse) -----
         let preEnd: CGFloat = 0.20
         let buildEnd: CGFloat = 0.45
-        let expandEnd: CGFloat = 4.25
-        let collapseEnd: CGFloat = 6.70
+        let expandEnd: CGFloat = 4.35
+        let holdEnd: CGFloat = 4.60
+        let collapseEnd: CGFloat = 6.85
 
         var globalRadiusScale: CGFloat = 0
         var globalColor: UIColor = .white
@@ -397,7 +408,7 @@ final class FireworkScene: SKScene {
             coreDot.setScale(0.6 + p*0.4)
         } else if ct < expandEnd {
             let p = (ct - buildEnd) / (expandEnd - buildEnd)
-            let eased = easeOutCubic(p)
+            let eased = easeOutQuart(p) // slower as approaches max
             // 0.10 -> 1.0 smooth single expansion
             globalRadiusScale = 0.10 + 0.90 * eased
             zSpread = sin(p * .pi) * 0.9
@@ -429,15 +440,26 @@ final class FireworkScene: SKScene {
             centerGlow.alpha = coreFade * 0.25
             coreDot.alpha = max(0, 1 - p*3.0)
             if p > 0.35 { coreDot.isHidden = true }
-            
+             
+        } else if ct < holdEnd {
+            // Stationary at max — velocity zero (no flicker)
+            globalRadiusScale = 1.0
+            globalColor = colWhite
+            globalLengthScale = 0.18 // point
+            globalWidthScale = 0.45
+            globalAlpha = 0.92
+            zSpread = 0
+            coreHalo.alpha = 0.12
+            coreHalo.size = CGSize(width: 112, height: 112)
+            centerGlow.alpha = 0.0375
+            centerGlow.size = CGSize(width: 90, height: 90)
+            coreDot.isHidden = true
         } else if ct < collapseEnd {
-            let p = (ct - expandEnd) / (collapseEnd - expandEnd) // 0->1
-            let eased = easeInCubic(p)
-            // Single smooth collapse 1.0 -> 0.05 without pause
-            globalRadiusScale = 1.0 + (0.05 - 1.0) * eased
-            zSpread = 0.9 * (1 - p)
-            
-            // Color: white -> lav -> purple -> deep -> blue continuously
+            let p = (ct - holdEnd) / (collapseEnd - holdEnd) // 0->1
+            let eased = easeInCubic(p) // accelerating inward (slow point → fast droplet)
+            // Per-particle radius handled later, keep global for reference
+            globalRadiusScale = 1.0 // placeholder (per-particle overrides)
+            zSpread = sin(p * .pi) * 0.6 // smaller, 0 at both ends
             if p < 0.38 {
                 globalColor = lerpColor(colWhite, colLav, p / 0.38)
             } else if p < 0.62 {
@@ -447,21 +469,15 @@ final class FireworkScene: SKScene {
             } else {
                 globalColor = lerpColor(colDeep, colBlue, (p - 0.85)/0.15)
             }
-            
-            // During collapse, particles re-streak slightly as they accelerate inward, then shrink to core
-            // Use velocity-based length: peak mid-collapse
-            // 0.18 at collapse start, ~1.35 mid, ~0.42 at end
-            let velPeak = sin(p * .pi) // 0->1->0
-            globalLengthScale = 0.18 + velPeak * 1.15 + p * p * 0.22 // 0.18 -> 1.33 -> 0.40
-            globalWidthScale = 0.45 + velPeak * 0.72 + p * 0.15  // 0.45 -> 1.17 -> 0.60
-            globalAlpha = 1.0 - p * 0.22
-            
-            // core reforms
+            // Reverse of expansion: point (0.18) → droplet (2.35) as acceleration increases
+            globalLengthScale = lerp(0.18, 2.35, eased)
+            globalWidthScale = lerp(0.45, 1.75, eased)
+            globalAlpha = 0.92 - p * 0.18 // keep visible until center
             let coreReappear = eased
-            coreHalo.alpha = coreReappear * 0.52
-            coreHalo.color = lerpColor(colWhite, colBlue, p)
-            coreHalo.size = CGSize(width: lerp(30, 110, eased), height: lerp(30, 110, eased))
-            centerGlow.alpha = coreReappear * 0.18
+            coreHalo.alpha = lerp(0.12, 0.42, eased)
+            coreHalo.size = CGSize(width: lerp(112, 110, eased), height: lerp(112, 110, eased))
+            centerGlow.alpha = lerp(0.0375, 0.14, eased)
+            centerGlow.size = CGSize(width: lerp(90, 100, eased), height: lerp(90, 100, eased))
             if p > 0.88 {
                 coreDot.isHidden = false
                 coreDot.alpha = (p - 0.88)/0.12
@@ -469,17 +485,24 @@ final class FireworkScene: SKScene {
                 coreDot.isHidden = true
             }
         } else {
-            // tail gap before next cycle
-            particlesHidden = true
-            globalRadiusScale = 0.05
-            coreHalo.alpha = 0.12
-            centerGlow.alpha = 0.05
+            // Gap before restart — keep center filled with arrived particles (no clear)
+            let gapP = (ct - collapseEnd) / CGFloat(cycleDuration - collapseEnd) // 0..1 (0.35s)
+            globalRadiusScale = 0.12 // small cluster, not single point
+            globalColor = colBlue
+            globalLengthScale = 2.35 // keep droplet at center before vanish (reverse holds)
+            globalWidthScale = 1.75
+            globalAlpha = 0.74 * (1 - gapP) // fade while still at center
+            particlesHidden = gapP > 0.85 // hide only last 15% (~0.05s) before restart
+            coreHalo.alpha = 0
+            centerGlow.alpha = 0
             coreDot.isHidden = false
             coreDot.alpha = 0.0
             zSpread = 0
         }
 
-        // Update particles with perspective
+        // Update particles with perspective — per-particle collapse (particles fall individually, not canvas) + hold
+        let isCollapseOrGap = ct >= holdEnd
+        let collapseP: CGFloat = ct < holdEnd ? 0 : ct < collapseEnd ? (ct - holdEnd) / (collapseEnd - holdEnd) : 1
         if particlesHidden {
             for pr in particles {
                 pr.node.isHidden = true
@@ -505,7 +528,23 @@ final class FireworkScene: SKScene {
                 // FIX 3: keep max effective radius inside screen
                 let perspectiveScale = 1.0 + clampedZ * 0.40 // 0.6 ... 1.4 (was 0.7)
                 
-                let baseR = pr.targetR * globalRadiusScale
+                let baseR: CGFloat
+                var curLenScale = globalLengthScale
+                var curWidScale = globalWidthScale
+                if isCollapseOrGap {
+                    let delay = (pr.collapseJitter + 0.07) / 0.14 * 0.22
+                    let pAdj = collapseP < delay ? 0 : (collapseP - delay) / (1 - delay)
+                    let easedAdj = easeInCubic(pAdj)
+                    let indScale = 1.0 + (pr.endScale - 1.0) * easedAdj
+                    baseR = pr.targetR * indScale
+                    // Reverse of expansion: point → droplet
+                    curLenScale = lerp(0.18, 2.35, easedAdj)
+                    curWidScale = lerp(0.45, 1.75, easedAdj)
+                } else {
+                    baseR = pr.targetR * globalRadiusScale
+                    curLenScale = globalLengthScale
+                    curWidScale = globalWidthScale
+                }
                 let baseX = centerPoint.x + cos(pr.angle) * baseR
                 let baseY = centerPoint.y + sin(pr.angle) * baseR
                 
@@ -521,11 +560,11 @@ final class FireworkScene: SKScene {
                 
                 n.position = scaledPosition
                 
-                // FIX 2: size with global length/width that decreases outward
+                // size with per-particle length (reverse during collapse)
                 let sizeScale = perspectiveScale
-                let h = pr.baseLen * globalLengthScale * sizeScale
-                let w = pr.baseWid * globalWidthScale * sizeScale
-                n.size = CGSize(width: max(0.7, w), height: max(1.2, h))
+                let h = pr.baseLen * curLenScale * sizeScale
+                let w = pr.baseWid * curWidScale * sizeScale
+                n.size = CGSize(width: max(1.1, w), height: max(1.8, h))
                 
                 // alpha: front brighter, back dimmer — but keep inner core visible
                 let depthAlpha = 0.62 + (clampedZ + 1) / 2 * 0.38
