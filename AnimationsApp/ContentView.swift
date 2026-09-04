@@ -26,8 +26,8 @@ struct ContentView: View {
     
     var body: some View {
         // --- Starburst RealityKit animation ---
-//        StarburstView()
-//            .ignoresSafeArea()
+        StarburstView()
+            .ignoresSafeArea()
 
         /* --- FireworkScene SpriteKit view ---
         GeometryReader { geometry in
