@@ -6,14 +6,44 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0F23618B3053CE8600DE4968 /* BounceAnimationBase.blend1 in Resources */ = {isa = PBXBuildFile; fileRef = 0F23618A3053CE8600DE4968 /* BounceAnimationBase.blend1 */; };
+		0F23618F3054040900DE4968 /* BounceScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F23618E3054040200DE4968 /* BounceScene.swift */; };
+		0FBF5EE130594E63009A9F99 /* Book_Loader_Animation.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 0FBF5EE030594E63009A9F99 /* Book_Loader_Animation.mp4 */; };
+		1BA0427F78704045BE944A02 /* DropletEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C849B0F5F19411497B50177 /* DropletEntity.swift */; };
+		530D53EEB00F4C8095819FB1 /* AnimationsAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E860278026A44BAC89207E53 /* AnimationsAppApp.swift */; };
+		5D713DAABE7A4C5AAF6ED3E8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F064527D3A436B8B173D5A /* ContentView.swift */; };
+		7CE83B17CCE042B790718E3F /* Particle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 383F7D0824C14EF8925DEF8B /* Particle.swift */; };
+		9ACADD5E6E26480E80011F32 /* BounceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4585E67D4C824315AF16BC99 /* BounceView.swift */; };
+		B4F19814CA944E61B1352425 /* StarburstView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E334EEB64844462BA7097CB9 /* StarburstView.swift */; };
+		C5F33FBFF1AA40EBA5D3FEAA /* StarburstScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 654562BCB1B14DE39D36C4F1 /* StarburstScene.swift */; };
+		F94DCA0A88474D7BB8CAF717 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 60BB37E61B9241FF988CDD9E /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		0C849B0F5F19411497B50177 /* DropletEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropletEntity.swift; sourceTree = "<group>"; };
+		0F23618A3053CE8600DE4968 /* BounceAnimationBase.blend1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = BounceAnimationBase.blend1; sourceTree = "<group>"; };
+		0F23618E3054040200DE4968 /* BounceScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BounceScene.swift; sourceTree = "<group>"; };
 		0F58122B3047ED8D00638698 /* AnimationsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AnimationsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0FBF5EE030594E63009A9F99 /* Book_Loader_Animation.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Book_Loader_Animation.mp4; sourceTree = "<group>"; };
+		383F7D0824C14EF8925DEF8B /* Particle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Particle.swift; sourceTree = "<group>"; };
+		4585E67D4C824315AF16BC99 /* BounceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BounceView.swift; sourceTree = "<group>"; };
+		60BB37E61B9241FF988CDD9E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		654562BCB1B14DE39D36C4F1 /* StarburstScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarburstScene.swift; sourceTree = "<group>"; };
+		C6F064527D3A436B8B173D5A /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		E334EEB64844462BA7097CB9 /* StarburstView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarburstView.swift; sourceTree = "<group>"; };
+		E860278026A44BAC89207E53 /* AnimationsAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationsAppApp.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		0F58122D3047ED8D00638698 /* AnimationsApp */ = {
+		0F862178304EC3740059F9A0 /* Components */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = AnimationsApp;
+			path = Components;
+			sourceTree = "<group>";
+		};
+		0FBF5ED6305911EF009A9F99 /* Book Loader */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = "Book Loader";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -45,6 +75,50 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		0F58122D3047ED8D00638698 /* AnimationsApp */ = {
+			isa = PBXGroup;
+			children = (
+				0FBF5ED6305911EF009A9F99 /* Book Loader */,
+				E860278026A44BAC89207E53 /* AnimationsAppApp.swift */,
+				C6F064527D3A436B8B173D5A /* ContentView.swift */,
+				92D670E78BDA431EAFC558CC /* Bounce */,
+				EFC9F5FCC5E24C1CBC8CA961 /* StarBurst */,
+				60BB37E61B9241FF988CDD9E /* Assets.xcassets */,
+				0F23618A3053CE8600DE4968 /* BounceAnimationBase.blend1 */,
+				0FBF5EE030594E63009A9F99 /* Book_Loader_Animation.mp4 */,
+			);
+			path = AnimationsApp;
+			sourceTree = "<group>";
+		};
+		2C739FB293114EB88C2AB9B0 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				383F7D0824C14EF8925DEF8B /* Particle.swift */,
+				0C849B0F5F19411497B50177 /* DropletEntity.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		92D670E78BDA431EAFC558CC /* Bounce */ = {
+			isa = PBXGroup;
+			children = (
+				0F23618E3054040200DE4968 /* BounceScene.swift */,
+				0F862178304EC3740059F9A0 /* Components */,
+				4585E67D4C824315AF16BC99 /* BounceView.swift */,
+			);
+			path = Bounce;
+			sourceTree = "<group>";
+		};
+		EFC9F5FCC5E24C1CBC8CA961 /* StarBurst */ = {
+			isa = PBXGroup;
+			children = (
+				654562BCB1B14DE39D36C4F1 /* StarburstScene.swift */,
+				E334EEB64844462BA7097CB9 /* StarburstView.swift */,
+				2C739FB293114EB88C2AB9B0 /* Model */,
+			);
+			path = StarBurst;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -61,7 +135,8 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0F58122D3047ED8D00638698 /* AnimationsApp */,
+				0F862178304EC3740059F9A0 /* Components */,
+				0FBF5ED6305911EF009A9F99 /* Book Loader */,
 			);
 			name = AnimationsApp;
 			packageProductDependencies = (
@@ -109,6 +184,9 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				0FBF5EE130594E63009A9F99 /* Book_Loader_Animation.mp4 in Resources */,
+				F94DCA0A88474D7BB8CAF717 /* Assets.xcassets in Resources */,
+				0F23618B3053CE8600DE4968 /* BounceAnimationBase.blend1 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,6 +197,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				530D53EEB00F4C8095819FB1 /* AnimationsAppApp.swift in Sources */,
+				5D713DAABE7A4C5AAF6ED3E8 /* ContentView.swift in Sources */,
+				9ACADD5E6E26480E80011F32 /* BounceView.swift in Sources */,
+				0F23618F3054040900DE4968 /* BounceScene.swift in Sources */,
+				C5F33FBFF1AA40EBA5D3FEAA /* StarburstScene.swift in Sources */,
+				B4F19814CA944E61B1352425 /* StarburstView.swift in Sources */,
+				7CE83B17CCE042B790718E3F /* Particle.swift in Sources */,
+				1BA0427F78704045BE944A02 /* DropletEntity.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
