@@ -8,7 +8,7 @@ struct StarburstView: View {
     
     var body: some View {
         
-    /* RealityView{ content in} :- Hosting 3D content in SwiftUI app
+    /* RealityView{ content in } :- Hosting 3D content in SwiftUI app
                                    Managing RealityKit scenes within the SwiftUI lifecycle
                                    Creating AR/VR experiences with minimal boilerplate */
         RealityView{ content in
