@@ -9,10 +9,6 @@
 /* Begin PBXBuildFile section */
 		0F23618B3053CE8600DE4968 /* BounceAnimationBase.blend1 in Resources */ = {isa = PBXBuildFile; fileRef = 0F23618A3053CE8600DE4968 /* BounceAnimationBase.blend1 */; };
 		0F23618F3054040900DE4968 /* BounceScene.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F23618E3054040200DE4968 /* BounceScene.swift */; };
-		0F4A27F9305AACA100B060F7 /* mid.png in Resources */ = {isa = PBXBuildFile; fileRef = 0F4A27F8305AACA100B060F7 /* mid.png */; };
-		0F4A27FB305AACC000B060F7 /* start.png in Resources */ = {isa = PBXBuildFile; fileRef = 0F4A27FA305AACC000B060F7 /* start.png */; };
-		0F4A27FD305AACE200B060F7 /* end.png in Resources */ = {isa = PBXBuildFile; fileRef = 0F4A27FC305AACE200B060F7 /* end.png */; };
-		0FBF5EE130594E63009A9F99 /* Book_Loader_Animation.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 0FBF5EE030594E63009A9F99 /* Book_Loader_Animation.mp4 */; };
 		1BA0427F78704045BE944A02 /* DropletEntity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C849B0F5F19411497B50177 /* DropletEntity.swift */; };
 		530D53EEB00F4C8095819FB1 /* AnimationsAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = E860278026A44BAC89207E53 /* AnimationsAppApp.swift */; };
 		5D713DAABE7A4C5AAF6ED3E8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F064527D3A436B8B173D5A /* ContentView.swift */; };
@@ -27,11 +23,7 @@
 		0C849B0F5F19411497B50177 /* DropletEntity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DropletEntity.swift; sourceTree = "<group>"; };
 		0F23618A3053CE8600DE4968 /* BounceAnimationBase.blend1 */ = {isa = PBXFileReference; lastKnownFileType = text; path = BounceAnimationBase.blend1; sourceTree = "<group>"; };
 		0F23618E3054040200DE4968 /* BounceScene.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BounceScene.swift; sourceTree = "<group>"; };
-		0F4A27F8305AACA100B060F7 /* mid.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mid.png; sourceTree = "<group>"; };
-		0F4A27FA305AACC000B060F7 /* start.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = start.png; sourceTree = "<group>"; };
-		0F4A27FC305AACE200B060F7 /* end.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = end.png; sourceTree = "<group>"; };
 		0F58122B3047ED8D00638698 /* AnimationsApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AnimationsApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		0FBF5EE030594E63009A9F99 /* Book_Loader_Animation.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = Book_Loader_Animation.mp4; sourceTree = "<group>"; };
 		383F7D0824C14EF8925DEF8B /* Particle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Particle.swift; sourceTree = "<group>"; };
 		4585E67D4C824315AF16BC99 /* BounceView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BounceView.swift; sourceTree = "<group>"; };
 		60BB37E61B9241FF988CDD9E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -91,10 +83,6 @@
 				EFC9F5FCC5E24C1CBC8CA961 /* StarBurst */,
 				60BB37E61B9241FF988CDD9E /* Assets.xcassets */,
 				0F23618A3053CE8600DE4968 /* BounceAnimationBase.blend1 */,
-				0FBF5EE030594E63009A9F99 /* Book_Loader_Animation.mp4 */,
-				0F4A27F8305AACA100B060F7 /* mid.png */,
-				0F4A27FA305AACC000B060F7 /* start.png */,
-				0F4A27FC305AACE200B060F7 /* end.png */,
 			);
 			path = AnimationsApp;
 			sourceTree = "<group>";
@@ -193,10 +181,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0F4A27FB305AACC000B060F7 /* start.png in Resources */,
-				0F4A27FD305AACE200B060F7 /* end.png in Resources */,
-				0FBF5EE130594E63009A9F99 /* Book_Loader_Animation.mp4 in Resources */,
-				0F4A27F9305AACA100B060F7 /* mid.png in Resources */,
 				F94DCA0A88474D7BB8CAF717 /* Assets.xcassets in Resources */,
 				0F23618B3053CE8600DE4968 /* BounceAnimationBase.blend1 in Resources */,
 			);

@@ -16,9 +16,8 @@ import SwiftUI
 
 struct BookLoaderView: View {
     
-    @State private var progress: CGFloat = 1 // TEST-ONLY: start open
-    @State private var flip: CGFloat = 0
-    @State private var flipLooping = false
+    @State private var progress: CGFloat = 0
+    @State private var bookOpen = false
     
     var body: some View {
         GeometryReader { geometry in
@@ -121,65 +120,44 @@ struct BookLoaderView: View {
                     )
                 
                 // MARK: - Flip Page (loader)
-                // Shown only once the book is open. Starts identical to
-                // Page 2 but a little above it, arcs over to the right and
-                // lands just above Page 1 with a slight fade.
-                let bookOpen = swingPhase >= 0.999
-                let flipPageW = width * 0.30
-                let flipLiftAbovePages: CGFloat = 8
-                let flipArcHeight: CGFloat = 30
-                let flipLeftX = spineHx
-                let flipRightX = spineHx + 2 * radius
-                let flipBaseY = spineHy - page1OffsetFromTopCover - flipLiftAbovePages
-                let flipHX = flipLeftX + (flipRightX - flipLeftX) * flip
-                let flipArcLift = flipArcHeight * CGFloat(sin(Double.pi * Double(flip)))
-                let flipHY = flipBaseY - flipArcLift
-                let flipOpacity: CGFloat = {
-                    guard bookOpen else { return 0 }
+                
+                TimelineView(.animation(minimumInterval: 0.5 / 60)) { timeline in
+                    let period: Double = 0.6
+                    let raw = timeline.date.timeIntervalSinceReferenceDate
+                        .truncatingRemainder(dividingBy: period) / period
+        
+                    let flip = CGFloat(raw * raw * (3 - 2 * raw))
+                    let flipPageW = width * 0.30
+                    let flipBaseY = spineHy - page1OffsetFromTopCover - 8
+                    let flipHX = spineHx + (2 * radius) * flip
+                    let flipHY = flipBaseY - 30 * CGFloat(sin(Double.pi * Double(flip)))
                     let fadeIn = min(max(flip / 0.12, 0), 1)
                     let fadeOut = flip > 0.82 ? max(0, 1 - (flip - 0.82) / 0.18) : 1
-                    return fadeIn * fadeOut
-                }()
-                
-                Capsule()
-                    .fill(.white)
-                    .frame(width: flipPageW, height: 8)
-                    .rotationEffect(.degrees(180 * flip), anchor: .trailing)
-                    .position(x: flipHX - flipPageW / 2, y: flipHY)
-                    .opacity(flipOpacity)
+                    
+                    Capsule()
+                        .fill(.white)
+                        .frame(width: flipPageW, height: 8)
+                        .rotationEffect(.degrees(180 * flip), anchor: .trailing)
+                        .position(x: flipHX - flipPageW / 2, y: flipHY)
+                        .opacity(bookOpen ? fadeIn * fadeOut : 0)
+                    
+        
+                }
             }
-            .onTapGesture {
+            .onAppear {
                 withAnimation(.easeInOut(duration: 2.0)) {
                     progress = progress == 0 ? 1.0 : 0
                 }
             }
-            .task { // TEST-ONLY: start flip loop immediately
-                guard !flipLooping else { return }
-                flipLooping = true
-                flip = 0
-                withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: false)) {
-                    flip = 1
-                }
-            }
             .onChange(of: progress) { _, p in
                 if p >= 1.0 {
-                    // The book-open animation runs ~2s; start flipping only
-                    // after it completes. (The delay lives here and NOT in
-                    // the repeating animation — .delay + .repeatForever
-                    // combined never starts.)
+                    // The book-open animation runs ~2s; reveal the flip
+                    // loop only after the rotation completes.
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-                        guard progress >= 1.0, !flipLooping else { return }
-                        flipLooping = true
-                        flip = 0
-                        withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: false)) {
-                            flip = 1
-                        }
+                        if progress >= 1.0 { bookOpen = true }
                     }
-                } else if flipLooping {
-                    flipLooping = false
-                    withAnimation(.easeOut(duration: 0.25)) {
-                        flip = 0
-                    }
+                } else {
+                    bookOpen = false
                 }
             }
         }
