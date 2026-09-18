@@ -11,8 +11,12 @@ struct SpineShape: Shape {
     var openSwing: Angle
     var closeSwing: Angle = .degrees(0)
     var closing: Bool = false
-    var radius: CGFloat = 30
+    var radius: CGFloat = BookSpine.radius
 
+    /*
+     AnimatableData property is used to tell SwiftUI how to smoothly interpolate(animate)
+     a custom property of your own view or shape over time.
+     */
     var animatableData: AnimatablePair<Double, Double> {
         get { AnimatablePair(openSwing.degrees, closeSwing.degrees) }
         set {
@@ -22,8 +26,8 @@ struct SpineShape: Shape {
     }
 
     func path(in rect: CGRect) -> Path {
-        let hx = rect.midX - 20
-        let hy = rect.midY + 60
+        let hx = rect.midX - BookSpine.hxOffset
+        let hy = rect.midY + BookSpine.hyOffset
         var p = Path()
         
         if !closing {
@@ -33,8 +37,8 @@ struct SpineShape: Shape {
             p.addArc(
                 center: CGPoint(x: cx, y: cy),
                 radius: radius,
-                startAngle: .degrees(-90) + openSwing,
-                endAngle: .degrees(90) + openSwing,
+                startAngle: .degrees(-BookSwing.halfFlip) + openSwing,
+                endAngle: .degrees(BookSwing.halfFlip) + openSwing,
                 clockwise: false
             )
         } else {
@@ -48,7 +52,7 @@ struct SpineShape: Shape {
                 center: CGPoint(x: cx, y: cy),
                 radius: radius,
                 startAngle: closeSwing,
-                endAngle: closeSwing + .degrees(180),
+                endAngle: closeSwing + .degrees(BookSwing.fullFlip),
                 clockwise: false
             )
         }

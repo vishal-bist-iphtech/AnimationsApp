@@ -8,15 +8,7 @@
 import SwiftUI
 
 struct BookLoaderView: View {
-        
-    // constants
-    private let openEnd:    Double = 2
-    private let closeStart: Double = 4
-    private let closeEnd:   Double = 5
-    private let reopenStart: Double = 7
-    private let reopenEnd:  Double = 8
-    private let holdEnd:    Double = 10
-    private let cycle:      Double = 12
+    
     
     // SmoothStep function(3r2 - 2r3): easeInOut without using withAnimation
     private func eased(_ x: Double) -> CGFloat {
@@ -27,26 +19,26 @@ struct BookLoaderView: View {
     var body: some View {
         GeometryReader { geometry in
             
-            TimelineView(.animation(minimumInterval: 1 / 60)) { master in
+            TimelineView(.animation(minimumInterval: BookTimeline.frameInterval)) { master in
             
                 let now = master.date.timeIntervalSinceReferenceDate
-                    .truncatingRemainder(dividingBy: cycle)
+                    .truncatingRemainder(dividingBy: BookTimeline.cycle)
                     
                 // MARK: Progress: 0-2 open, 2-10 hold, 10-12 close
                 let progress: CGFloat =
-                    now < openEnd ? eased(now / 2) :
-                    now < holdEnd ? 1 : 1 - eased((now - holdEnd) / 2)
+                    now < BookTimeline.openEnd ? eased(now / BookTimeline.openEnd) :
+                    now < BookTimeline.holdEnd ? 1 : 1 - eased((now - BookTimeline.holdEnd) / (BookTimeline.cycle - BookTimeline.holdEnd))
                     
                 // spineRotate
                 // 0-4 hold, 4-5 close bottom, 5-7 hold flipped,7-8 reopen bottom, 8-12 hold
                 let spineRotate: CGFloat =
-                    now < closeStart ? 0 :
-                    now < closeEnd ? eased(now - closeStart) :
-                    now < reopenStart ? 1 :
-                    now < reopenEnd ? 1 - eased(now - reopenStart) : 0
-                    
+                    now < BookTimeline.closeStart ? 0 :
+                    now < BookTimeline.closeEnd ? eased((now - BookTimeline.closeStart) / (BookTimeline.closeEnd - BookTimeline.closeStart)) :
+                    now < BookTimeline.reopenStart ? 1 :
+                    now < BookTimeline.reopenEnd ? 1 - eased((now - BookTimeline.reopenStart) / (BookTimeline.reopenEnd - BookTimeline.reopenStart)) : 0
+                     
                 // flip pages only during open
-                let bookOpen: Bool = (now > openEnd && now < closeStart) || (now > reopenStart && now < holdEnd)
+                let bookOpen: Bool = (now > BookTimeline.openEnd && now < BookTimeline.closeStart) || (now > BookTimeline.reopenStart && now < BookTimeline.holdEnd)
                 let width = geometry.size.width
                 let height = geometry.size.height
                 
@@ -54,9 +46,9 @@ struct BookLoaderView: View {
                 let hingeY = height / 2
                 
                 // Spine geometry
-                let spineHx = hingeX - 20
-                let spineHy = hingeY + 60
-                let radius: CGFloat = 30
+                let spineHx = hingeX - BookSpine.hxOffset
+                let spineHy = hingeY + BookSpine.hyOffset
+                let radius: CGFloat = BookSpine.radius
                 
                 ZStack {
                     
@@ -66,11 +58,11 @@ struct BookLoaderView: View {
                     ZStack {
                     
                     // MARK: - Phases
-                    let openingPhase  = min(max((progress - 0.5) / 0.5, 0), 1)
-                    let openingSwing   = Angle(degrees: 90 * openingPhase)
+                    let openingPhase  = min(max((progress - BookSwing.openingThreshold) / BookSwing.openingThreshold, 0), 1)
+                    let openingSwing   = Angle(degrees: BookSwing.halfFlip * openingPhase)
                     
                     let closingPhase = min(max(spineRotate, 0), 1)
-                    let closingSwing = Angle(degrees: 90 * closingPhase)
+                    let closingSwing = Angle(degrees: BookSwing.halfFlip * closingPhase)
                     
                     // MARK: - Spine swing arc geometry (trajectory for moving capsules)
                     
@@ -95,16 +87,16 @@ struct BookLoaderView: View {
                     
                     // MARK: - Shared layout constants
 
-                    let coverThickness: CGFloat = 15
+                    let coverThickness: CGFloat = BookLayout.coverThickness
                     
-                    let page1OffsetFromTopCover: CGFloat = 22
-                    let page2OffsetFromBottomCover: CGFloat = 22
+                    let page1OffsetFromTopCover: CGFloat = BookLayout.page1Offset
+                    let page2OffsetFromBottomCover: CGFloat = BookLayout.page2Offset
                     
-                    let openingAngle = Angle(degrees: 180 * openingPhase)
-                    let closingAngle = Angle(degrees: 180 * closingPhase)
+                    let openingAngle = Angle(degrees: BookSwing.fullFlip * openingPhase)
+                    let closingAngle = Angle(degrees: BookSwing.fullFlip * closingPhase)
 
                         
-                    let jointOverlap: CGFloat = 7
+                    let jointOverlap: CGFloat = BookLayout.jointOverlap
                     // Top pair follows opening hinge trail
                     let overlapX = cos(openingAngle.radians) * jointOverlap
                     let overlapY = sin(openingAngle.radians) * jointOverlap
@@ -115,10 +107,10 @@ struct BookLoaderView: View {
                     // MARK: - Top Cover
                     Capsule()
                         .fill(.white)
-                        .frame(width: width * 0.35, height: coverThickness)
+                        .frame(width: width * BookLayout.coverWidthFactor, height: coverThickness)
                         .rotationEffect(openingAngle, anchor: .trailing)
                         .position(
-                            x: trailPoint.x + overlapX - (width * 0.35) / 2,
+                            x: trailPoint.x + overlapX - (width * BookLayout.coverWidthFactor) / 2,
                             y: trailPoint.y + overlapY
                         )
                     
@@ -133,10 +125,10 @@ struct BookLoaderView: View {
                     
                     Capsule()
                         .fill(.white)
-                        .frame(width: width * 0.30, height: 8)
+                        .frame(width: width * BookLayout.pageWidthFactor, height: BookLayout.pageThickness)
                         .rotationEffect(openingAngle, anchor: .trailing)
                         .position(
-                            x: page1TrailX + overlapX - width * 0.30 / 2,
+                            x: page1TrailX + overlapX - width * BookLayout.pageWidthFactor / 2,
                             y: page1TrailY + overlapY
                         )
                     
@@ -145,12 +137,12 @@ struct BookLoaderView: View {
                     SpineShape(
                         openSwing: openingSwing,
                         closeSwing: closingSwing,
-                        closing: spineRotate > 0.001
+                        closing: spineRotate > BookSpine.closingThreshold
                     )
                         .stroke(
                             .white,
                             style: StrokeStyle(
-                                lineWidth: 15,
+                                lineWidth: BookLayout.coverThickness,
                                 lineCap: .round,
                                 lineJoin: .round
                             )
@@ -171,10 +163,10 @@ struct BookLoaderView: View {
                     // MARK: - Page 2
                     Capsule()
                         .fill(.white)
-                        .frame(width: width * 0.30, height: 8)
+                        .frame(width: width * BookLayout.pageWidthFactor, height: BookLayout.pageThickness)
                         .rotationEffect(closingAngle, anchor: .trailing)
                         .position(
-                            x: page2AnchorX - width * 0.30 / 2,
+                            x: page2AnchorX - width * BookLayout.pageWidthFactor / 2,
                             y: page2AnchorY
                         )
                     
@@ -182,21 +174,21 @@ struct BookLoaderView: View {
                     // MARK: - Bottom Cover
                     Capsule()
                         .fill(.white)
-                        .frame(width: width * 0.35, height: coverThickness)
+                        .frame(width: width * BookLayout.coverWidthFactor, height: coverThickness)
                         .rotationEffect(closingAngle, anchor: .trailing)
                         .position(
-                            x: bottomAnchorX - (width * 0.35) / 2,
+                            x: bottomAnchorX - (width * BookLayout.coverWidthFactor) / 2,
                             y: bottomAnchorY
                         )
                     
                     // MARK: - Flip Page
                     
-                    TimelineView(.animation(minimumInterval: 0.5 / 60)) { timeline in
-                        let period: Double = 0.7
+                    TimelineView(.animation(minimumInterval: BookTimeline.flipFrameInterval)) { timeline in
+                        let period: Double = BookTimeline.flipPeriod
                         let raw1 = timeline.date.timeIntervalSinceReferenceDate
                             .truncatingRemainder(dividingBy: period) / period
-       
-                        let pageCount = 5
+        
+                        let pageCount = BookTimeline.pageCount
                         
                         let pages = (0..<pageCount).map { i in
                             let raw = (raw1 + Double(i) / Double(pageCount)).truncatingRemainder(dividingBy: 1.0)
@@ -219,16 +211,16 @@ struct BookLoaderView: View {
                                     spineHy: spineHy,
                                     radius: radius,
                                     page1OffsetFromTopCover: page1OffsetFromTopCover,
-                                    reversed: now >= cycle/2
+                                    reversed: now >= BookTimeline.cycle / 2
                                 )
                             }
                         }
-                        .opacity(bookOpen && spineRotate < 0.01 ? 1 : 0)
+                        .opacity(bookOpen && spineRotate < BookLayout.visibilityThreshold ? 1 : 0)
                     }
                     
                     }
                     // to center the whole model
-                    .offset(x: -10)                
+                    .offset(x: BookLayout.modelOffsetX)                
               }
             }
         }
